@@ -11,10 +11,9 @@ import { TechBackground } from './components/TechBackground';
 
 function App() {
   return (
-    <div className="min-h-screen relative text-gray-800 selection:bg-indigo-500 selection:text-white overflow-hidden">
+    <div className="min-h-screen relative text-gray-800 selection:bg-indigo-500 selection:text-white overflow-hidden bg-[#fdfbf7]">
 
-      {/* Tech Background (Global) */}
-      <TechBackground />
+
 
 
       <Navbar />
@@ -23,7 +22,7 @@ function App() {
         <Hero />
 
         {/* Infinite Tech Marquee */}
-        <div className="py-10 bg-white/50 backdrop-blur-sm border-y border-white/50 overflow-hidden">
+        <div className="py-10 bg-white/50 backdrop-blur-sm border-y border-gray-200 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 mb-4 text-center">
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Propulsé par les meilleures technologies</p>
           </div>
@@ -85,16 +84,16 @@ function App() {
           <div className="max-w-4xl mx-auto relative z-10 text-center">
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight">
               L'IA n'attend pas. <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Pourquoi vous ?</span>
+              <span className="text-gradient-ai">Pourquoi vous ?</span>
             </h2>
-            <p className="text-gray-300 text-xl mb-12 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto leading-relaxed mt-6 mb-10">
               Réservez votre audit de faisabilité gratuit. Nous identifierons ensemble où vous perdez de l'argent et comment l'IA peut le récupérer.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-white text-gray-900 px-8 py-4 rounded-full text-lg font-bold hover:bg-indigo-50 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]">
                 Réserver mon audit offert
               </button>
-              <button className="px-8 py-4 rounded-full text-lg font-bold text-white border border-gray-700 hover:bg-gray-800 transition-all">
+              <button className="px-8 py-4 rounded-full text-lg font-bold text-gray-900 border border-gray-300 hover:bg-gray-100 transition-all">
                 Voir nos études de cas
               </button>
             </div>

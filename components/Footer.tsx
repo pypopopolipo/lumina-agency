@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
               Nous aidons les entreprises visionnaires à gagner du temps et à augmenter leurs profits grâce à l'intelligence artificielle et l'automatisation.
             </p>
           </div>
-          
+
           <div>
             <h4 className="font-bold text-lg mb-6">Services</h4>
             <ul className="space-y-4 text-gray-400">
@@ -27,7 +27,7 @@ export const Footer: React.FC = () => {
               <li><a href="#" className="hover:text-indigo-400 transition-colors">Formation Équipes</a></li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="font-bold text-lg mb-6">Légal</h4>
             <ul className="space-y-4 text-gray-400">
@@ -37,7 +37,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-500 text-sm">© 2024 Lumina AI Agency. Tous droits réservés.</p>
           <div className="flex gap-6">

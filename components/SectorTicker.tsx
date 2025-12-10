@@ -44,7 +44,7 @@ export const SectorTicker: React.FC<SectorTickerProps> = ({ words }) => {
             <span className="text-gradient-ai">
                 {displayText}
             </span>
-            <span className="ml-1 w-[4px] h-[0.9em] bg-[#7182ff] animate-pulse rounded-sm inline-block align-middle"></span>
+            <span className="ml-1 w-[4px] h-[0.9em] bg-[#5EA5F4] animate-pulse rounded-sm inline-block align-middle"></span>
         </span>
     );
 };

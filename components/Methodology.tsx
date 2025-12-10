@@ -82,12 +82,12 @@ const connectorVariants = {
 
 export const Methodology: React.FC = () => {
     return (
-        <section className="py-24 relative overflow-hidden bg-[#0a0a0f]">
+        <section className="py-24 relative overflow-hidden bg-[#111827]">
             {/* Subtle background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0d0d14] to-[#0a0a0f]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#111827] via-[#111827] to-[#111827]" />
 
             {/* Animated background glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-radial from-indigo-900/10 via-transparent to-transparent blur-3xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-radial from-[#5EA5F4]/10 via-transparent to-transparent blur-3xl pointer-events-none" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 {/* Section Header */}
@@ -98,10 +98,10 @@ export const Methodology: React.FC = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
                 >
-                    <span className="text-indigo-400 font-bold tracking-wider uppercase text-sm mb-4 block">
+                    <span className="text-[#5EA5F4] font-bold tracking-wider uppercase text-sm mb-4 block">
                         Framework SCAN
                     </span>
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
                         Notre <span className="text-gradient-ai">Méthodologie</span>
                     </h2>
                     <p className="text-gray-400 text-lg max-w-2xl mx-auto">
@@ -124,31 +124,31 @@ export const Methodology: React.FC = () => {
                                 {/* Step Card */}
                                 <motion.div
                                     variants={cardVariants}
-                                    className="methodology-card group relative p-6 rounded-2xl bg-gradient-to-b from-[#12121a] to-[#0d0d14] border border-gray-800/50 flex-1 mx-3 overflow-hidden transition-all duration-500 hover:border-indigo-500/50"
+                                    className="methodology-card group relative p-6 rounded-2xl bg-gradient-to-b from-[#12121a] to-[#0d0d14] border border-gray-800/50 flex-1 mx-3 overflow-hidden transition-all duration-500 hover:border-[#5EA5F4]/50"
                                     whileHover={{
                                         y: -8,
                                         transition: { type: 'spring', stiffness: 300 }
                                     }}
                                 >
                                     {/* Glow effect on hover */}
-                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-indigo-500/0 via-indigo-500/0 to-purple-500/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
-                                    <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-indigo-500/0 to-purple-500/0 opacity-0 group-hover:from-indigo-500/20 group-hover:to-purple-500/10 transition-all duration-500" />
+                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[#5EA5F4]/0 via-[#5EA5F4]/0 to-[#5EA5F4]/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
+                                    <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[#5EA5F4]/0 to-[#5EA5F4]/0 opacity-0 group-hover:from-[#5EA5F4]/20 group-hover:to-[#5EA5F4]/10 transition-all duration-500" />
 
                                     {/* Step Number Badge */}
-                                    <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-800/80 border border-gray-700/50 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:text-indigo-400 group-hover:border-indigo-500/50 transition-all duration-300">
+                                    <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-800/80 border border-gray-700/50 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:text-[#5EA5F4] group-hover:border-[#5EA5F4]/50 transition-all duration-300">
                                         {String(index + 1).padStart(2, '0')}
                                     </div>
 
                                     {/* Icon */}
                                     <div className="relative mb-5">
-                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-b from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 flex items-center justify-center group-hover:from-indigo-500/30 group-hover:to-purple-500/20 group-hover:border-indigo-400/50 group-hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all duration-500">
-                                            <step.icon size={26} className="text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300" />
+                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-b from-[#5EA5F4]/20 to-[#5EA5F4]/10 border border-[#5EA5F4]/30 flex items-center justify-center group-hover:from-[#5EA5F4]/30 group-hover:to-[#5EA5F4]/20 group-hover:border-[#5EA5F4]/50 group-hover:shadow-[0_0_30px_rgba(94,165,244,0.3)] transition-all duration-500">
+                                            <step.icon size={26} className="text-[#5EA5F4] group-hover:text-[#8ac2ff] transition-colors duration-300" />
                                         </div>
                                     </div>
 
                                     {/* Title with Letter */}
-                                    <h3 className="text-lg font-bold text-white mb-3 group-hover:text-indigo-100 transition-colors duration-300">
-                                        <span className="text-indigo-400 group-hover:text-indigo-300">{step.letter}</span> - {step.title}
+                                    <h3 className="text-lg font-bold text-white mb-3 group-hover:text-[#5EA5F4] transition-colors duration-300">
+                                        <span className="text-[#5EA5F4] group-hover:text-[#8ac2ff]">{step.letter}</span> - {step.title}
                                     </h3>
 
                                     {/* Description */}
@@ -157,7 +157,7 @@ export const Methodology: React.FC = () => {
                                     </p>
 
                                     {/* Bottom glow line */}
-                                    <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#5EA5F4]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                 </motion.div>
 
                                 {/* Connector (except for last item) */}
@@ -168,9 +168,9 @@ export const Methodology: React.FC = () => {
                                     >
                                         <div className="relative">
                                             {/* Connector line */}
-                                            <div className="w-6 h-px bg-gradient-to-r from-indigo-500/60 via-purple-500/60 to-indigo-500/60 connector-pulse" />
+                                            <div className="w-6 h-px bg-gradient-to-r from-[#5EA5F4]/60 via-[#5EA5F4]/60 to-[#5EA5F4]/60 connector-pulse" />
                                             {/* Connector dot */}
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)]" />
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#5EA5F4] shadow-[0_0_10px_rgba(94,165,244,0.6)]" />
                                         </div>
                                     </motion.div>
                                 )}
@@ -187,13 +187,13 @@ export const Methodology: React.FC = () => {
                                     className="methodology-card group relative p-6 rounded-2xl bg-gradient-to-b from-[#12121a] to-[#0d0d14] border border-gray-800/50 overflow-hidden transition-all duration-500"
                                 >
                                     {/* Glow effect on hover */}
-                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-indigo-500/0 to-purple-500/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
+                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[#5EA5F4]/0 to-[#5EA5F4]/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
 
                                     <div className="flex items-start gap-4">
                                         {/* Icon */}
                                         <div className="shrink-0">
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-b from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 flex items-center justify-center group-hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all duration-500">
-                                                <step.icon size={26} className="text-indigo-400" />
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-b from-[#5EA5F4]/20 to-[#5EA5F4]/10 border border-[#5EA5F4]/30 flex items-center justify-center group-hover:shadow-[0_0_30px_rgba(94,165,244,0.3)] transition-all duration-500">
+                                                <step.icon size={26} className="text-[#5EA5F4]" />
                                             </div>
                                         </div>
 
@@ -205,7 +205,7 @@ export const Methodology: React.FC = () => {
 
                                             {/* Title */}
                                             <h3 className="text-lg font-bold text-white mb-2">
-                                                <span className="text-indigo-400">{step.letter}</span> - {step.title}
+                                                <span className="text-[#5EA5F4]">{step.letter}</span> - {step.title}
                                             </h3>
 
                                             {/* Description */}
@@ -227,9 +227,9 @@ export const Methodology: React.FC = () => {
                                     >
                                         <div className="relative h-8">
                                             {/* Vertical connector line */}
-                                            <div className="w-px h-full bg-gradient-to-b from-indigo-500/60 via-purple-500/60 to-indigo-500/60" />
+                                            <div className="w-px h-full bg-gradient-to-b from-[#5EA5F4]/60 via-[#5EA5F4]/60 to-[#5EA5F4]/60" />
                                             {/* Connector dot */}
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)]" />
+                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full bg-[#5EA5F4] shadow-[0_0_10px_rgba(94,165,244,0.6)]" />
                                         </div>
                                     </motion.div>
                                 )}

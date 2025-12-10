@@ -51,7 +51,7 @@ export const StrategyGenerator: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
           <div>
-            <div className="inline-block bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-sm mb-4">
+            <div className="inline-block bg-[#5EA5F4]/10 text-[#5EA5F4] font-bold px-4 py-1.5 rounded-full text-sm mb-4">
               ✨ Démo Interactive
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
@@ -63,19 +63,19 @@ export const StrategyGenerator: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="relative max-w-md">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Sparkles className="text-indigo-400" size={20} />
+                <Sparkles className="text-[#5EA5F4]" size={20} />
               </div>
               <input
                 type="text"
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 placeholder="Votre secteur (ex: Immobilier, E-commerce B2B...)"
-                className="w-full pl-12 pr-4 py-5 bg-white text-lg rounded-2xl border-2 border-indigo-50 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-lg placeholder:text-gray-400"
+                className="w-full pl-12 pr-4 py-5 bg-white text-lg rounded-2xl border-2 border-[#5EA5F4]/10 focus:border-[#5EA5F4] focus:ring-4 focus:ring-[#5EA5F4]/20 outline-none transition-all shadow-lg placeholder:text-gray-400 text-gray-900"
               />
               <button
                 type="submit"
                 disabled={loading || !industry.trim()}
-                className="absolute right-2 top-2 bottom-2 bg-indigo-600 text-white px-6 rounded-xl font-medium hover:bg-indigo-700 transition-all disabled:bg-gray-200 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg shadow-indigo-200"
+                className="absolute right-2 top-2 bottom-2 bg-[#5EA5F4] text-white px-6 rounded-xl font-medium hover:bg-[#5EA5F4] transition-all disabled:class-gray-200 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg shadow-[#5EA5F4]/30"
               >
                 {loading ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={24} />}
               </button>
@@ -84,7 +84,7 @@ export const StrategyGenerator: React.FC = () => {
 
           <div className="relative">
             {/* Terminal / Result Area */}
-            <div className="glass-card rounded-3xl p-1 shadow-2xl min-h-[400px] flex flex-col relative overflow-hidden bg-white/40">
+            <div className="glass-panel rounded-3xl p-1 shadow-2xl min-h-[400px] flex flex-col relative overflow-hidden bg-white/40">
               {/* Window Controls */}
               <div className="bg-white/50 px-6 py-3 border-b border-white/50 flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -96,8 +96,8 @@ export const StrategyGenerator: React.FC = () => {
               <div className="p-6 md:p-8 flex-1 overflow-y-auto">
                 {!loading && !strategies && (
                   <div className="h-full flex flex-col items-center justify-center text-center text-gray-400 space-y-4">
-                    <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center animate-pulse">
-                      <Cpu size={40} className="text-indigo-300" />
+                    <div className="w-20 h-20 bg-[#5EA5F4]/10 rounded-full flex items-center justify-center animate-pulse">
+                      <Cpu size={40} className="text-[#5EA5F4]" />
                     </div>
                     <p className="font-medium">En attente d'input...</p>
                   </div>
@@ -120,10 +120,10 @@ export const StrategyGenerator: React.FC = () => {
                 {strategies && (
                   <div className="space-y-4 animate-float">
                     {strategies.map((strategy, idx) => (
-                      <div key={idx} className="bg-white/80 p-5 rounded-xl border border-indigo-50 hover:border-indigo-200 transition-colors shadow-sm">
+                      <div key={idx} className="bg-white/80 p-5 rounded-xl border border-[#5EA5F4]/20 hover:border-[#5EA5F4] transition-colors shadow-sm">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-bold text-indigo-900">{strategy.title}</h3>
-                          <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">{strategy.impact}</span>
+                          <h3 className="font-bold text-[#5EA5F4]">{strategy.title}</h3>
+                          <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded border border-green-200">{strategy.impact}</span>
                         </div>
                         <p className="text-sm text-gray-600 mb-3 leading-relaxed">{strategy.description}</p>
                         <div className="flex gap-2 flex-wrap">
@@ -141,7 +141,7 @@ export const StrategyGenerator: React.FC = () => {
             </div>
 
             {/* Decorative background behind terminal */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[2.5rem] -z-10 blur-xl opacity-20 animate-pulse"></div>
+            <div className="absolute -inset-4 bg-gradient-to-r from-[#5EA5F4] to-[#22d3ee] rounded-[2.5rem] -z-10 blur-xl opacity-20 animate-pulse"></div>
           </div>
         </div>
       </div>

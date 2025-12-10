@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Typography & Colors */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #fdfbf7;
+  /* Cream/Off-White */
+  color: #4B5563;
+  /* Gray 600 */
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #111827;
+  /* Gray 900 */
+}
+
+p,
+span,
+li,
+a {
+  font-family: 'Inter', sans-serif;
+}
+
+/* New Deep Tech Gradients */
+.text-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-ai {
+  background: linear-gradient(90deg, #818cf8 0%, #22d3ee 100%);
+  /* Indigo-400 to Cyan-400 */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: shimmer 4s ease-in-out infinite alternate;
+}
+
+.bg-gradient-ai-bottom {
+  background: linear-gradient(90deg, #818cf8 0%, #22d3ee 100%);
+  background-size: 200% auto;
+  animation: shimmer 4s ease-in-out infinite alternate;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  /* Gray 200 */
+}
+
+/* Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Marquee for logos */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+.marquee-track {
+  display: flex;
+  gap: 60px;
+  padding: 8px 30px;
+  flex-shrink: 0;
+}
+
+/* Service Card Hover Effects */
+.card-gradient-hover {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.card-gradient-hover:hover {
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.15);
+  /* Indigo glow */
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Utility for Service Icons */
+.ai-icon-container {
+  background: rgba(79, 70, 229, 0.1);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  display: inline-flex;
+}
+
+.ai-icon-container svg {
+  color: #4f46e5;
+  /* Indigo 600 */
+}
+
+/* Tech Logo Styling for Light Mode */
+.tech-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #6B7280;
+  /* Gray 500 */
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  filter: grayscale(100%);
+  opacity: 0.7;
+}
+
+.tech-logo:hover {
+  color: #111827;
+  /* Gray 900 */
+  filter: grayscale(0%);
+  opacity: 1;
+  transform: scale(1.05);
+}

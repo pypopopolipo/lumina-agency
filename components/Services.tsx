@@ -59,32 +59,31 @@ export const Services: React.FC = () => {
     <section id="services" className="py-24 relative">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-          <div className="max-w-2xl">
-            <span className="text-indigo-600 font-bold tracking-wider uppercase text-sm mb-2 block">Nos Services</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-              Une suite complète pour <br /> <span className="text-gray-400">scaler sans recruter.</span>
+          <div className="max-w-4xl">
+            <span className="text-[#5EA5F4] font-bold tracking-wider uppercase text-sm mb-2 block">Nos Services</span>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
+              L'Intelligence Opérationnelle<br />
+              <span className="text-gray-400">au service de votre croissance.</span>
             </h2>
           </div>
-          <button className="hidden md:flex items-center gap-2 text-gray-900 font-bold hover:text-indigo-600 transition-colors">
-            Voir tous les services <ArrowUpRight size={20} />
-          </button>
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service) => (
             <div
               key={service.id}
-              className="group relative p-8 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden hover:-translate-y-2 card-gradient-hover"
+              className="group relative p-8 rounded-3xl glass-panel hover:shadow-2xl transition-all duration-500 overflow-hidden hover:-translate-y-2 card-gradient-hover"
             >
               <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <ArrowUpRight className="text-gray-300 group-hover:text-indigo-500" />
+                <ArrowUpRight className="text-gray-300 group-hover:text-[#5EA5F4] transition-colors duration-300" />
               </div>
 
-              <div className="ai-icon-container mb-6 group-hover:scale-110 transition-all duration-300">
+              <div className="mb-6 inline-flex p-3 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-[#5EA5F4]/10 group-hover:text-[#5EA5F4] group-hover:scale-110 transition-all duration-300 border border-gray-100 group-hover:border-[#5EA5F4]/20">
                 <service.icon size={24} />
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
+              <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#5EA5F4] transition-colors duration-300">
                 {service.title}
               </h3>
 
@@ -94,7 +93,7 @@ export const Services: React.FC = () => {
 
               {/* Tech Tag */}
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-all duration-300">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200 group-hover:bg-[#5EA5F4]/10 group-hover:text-[#5EA5F4] group-hover:border-[#5EA5F4]/20 transition-all duration-300">
                   <svg className="w-3 h-3 mr-1.5 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                   </svg>
