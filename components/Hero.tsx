@@ -1,55 +1,53 @@
 import React from 'react';
 import { Zap, PlayCircle } from 'lucide-react';
-import { SectorTicker } from './SectorTicker';
-import { TechBackground } from './TechBackground';
+import { motion } from 'framer-motion';
 
 export const Hero: React.FC = () => {
-  const words = ["Vos Contenus", "Votre Administratif", "Votre Prospection", "Vos Reportings"];
-
   return (
-    <section className="relative pt-32 pb-20 px-6 max-w-7xl mx-auto min-h-[90vh] flex flex-col justify-center items-center overflow-visible">
+    <section className="relative pt-36 pb-16 w-full min-h-[85vh] flex flex-col justify-center items-center">
+      <div className="max-w-5xl mx-auto px-6 w-full relative z-10 flex flex-col items-center justify-center">
 
-      {/* Tech Background (Local to Hero) */}
-      <TechBackground />
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl md:text-5xl lg:text-6xl pb-2 text-center leading-tight"
+          style={{ fontFamily: 'Syne, sans-serif' }}
+        >
+          <span className="block text-[#f5f5f7]">Automatisez l'opérationnel.</span>
+          <span className="block text-gradient-accent mt-2">Concentrez-vous sur l'essentiel.</span>
+        </motion.h1>
 
-      {/* Dynamic Glow Effect behind Hero */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#5EA5F4]/10 rounded-full blur-3xl pointer-events-none z-0"></div>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-base md:text-lg text-[#8e8e93] max-w-xl mx-auto mt-8 mb-12 text-center leading-relaxed"
+        >
+          Vos équipes passent 30% de leur temps sur des tâches répétitives.
+          Nos agents IA gèrent l'exécution opérationnelle pour que vos talents
+          se concentrent enfin sur la stratégie.
+        </motion.p>
 
-      <div className="text-center max-w-5xl mx-auto space-y-10 relative z-10">
-        <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/80 backdrop-blur-md border border-[#5EA5F4]/20 shadow-sm text-[#5EA5F4] text-sm font-semibold hover:scale-105 transition-transform cursor-default">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#5EA5F4] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#5EA5F4]"></span>
-          </span>
-          Nouvelle technologie Gemini 2.5 Disponible
-        </div>
-
-        <h1 className="text-5xl md:text-8xl font-extrabold text-gray-900 leading-tight tracking-tight drop-shadow-sm">
-          Automatisez <br />
-          <SectorTicker words={words} />
-        </h1>
-
-        <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed font-light">
-          Vos équipes passent 30% de leur temps sur des tâches répétitives. Nos agents IA gèrent l'exécution opérationnelle pour que vos talents se concentrent enfin sur la stratégie et le client.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8 items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
           <a
             href="#demo"
-            className="group relative px-8 py-4 bg-gray-900 text-white rounded-full text-lg font-bold shadow-2xl hover:bg-gray-800 transition-all hover:-translate-y-1 overflow-hidden ring-4 ring-transparent hover:ring-[#5EA5F4]/20"
+            className="neumorphic-btn-primary px-8 py-4 text-sm group"
           >
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shine_1s_ease-in-out]"></div>
-            <span className="flex items-center gap-2">
-              <Zap size={20} className="text-yellow-400 group-hover:rotate-12 transition-transform" />
-              Estimer mes gains (Audit)
-            </span>
+            <Zap className="mr-2 h-4 w-4" />
+            <span>Estimer mes gains</span>
           </a>
 
-          <button className="flex items-center gap-3 text-gray-700 hover:text-[#5EA5F4] font-semibold transition-colors px-6 py-4 bg-white/50 backdrop-blur-sm rounded-full border border-gray-200 hover:border-[#5EA5F4]/30">
-            <PlayCircle size={24} />
+          <button className="neumorphic-btn-secondary px-8 py-4 text-sm group">
+            <PlayCircle size={18} className="mr-2 text-[#00d4ff]" />
             Voir des exemples
           </button>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

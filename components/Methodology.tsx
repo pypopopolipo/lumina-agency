@@ -82,13 +82,7 @@ const connectorVariants = {
 
 export const Methodology: React.FC = () => {
     return (
-        <section className="py-24 relative overflow-hidden bg-[#111827]">
-            {/* Subtle background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#111827] via-[#111827] to-[#111827]" />
-
-            {/* Animated background glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-radial from-[#5EA5F4]/10 via-transparent to-transparent blur-3xl pointer-events-none" />
-
+        <section className="py-24 relative overflow-hidden">
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 {/* Section Header */}
                 <motion.div
@@ -98,14 +92,14 @@ export const Methodology: React.FC = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
                 >
-                    <span className="text-[#5EA5F4] font-bold tracking-wider uppercase text-sm mb-4 block">
+                    <span className="text-[#00d4ff] font-semibold tracking-wider uppercase text-sm mb-4 block">
                         Framework SCAN
                     </span>
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-                        Notre <span className="text-gradient-ai">Méthodologie</span>
+                    <h2 className="text-3xl md:text-4xl font-bold text-gradient-accent mb-6" style={{fontFamily: 'Syne, sans-serif'}}>
+                        Notre Méthodologie
                     </h2>
-                    <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                        Une approche pragmatique en 4 étapes pour transformer vos opérations avec l'IA.
+                    <p className="text-[#8e8e93] text-lg max-w-2xl mx-auto">
+                        Une approche pragmatique en 4 étapes pour transformer vos opérations.
                     </p>
                 </motion.div>
 
@@ -117,123 +111,33 @@ export const Methodology: React.FC = () => {
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                 >
-                    {/* Desktop: Horizontal layout with connectors */}
-                    <div className="hidden lg:grid lg:grid-cols-4 gap-0 relative">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
                         {methodologySteps.map((step, index) => (
-                            <div key={step.id} className="relative flex items-stretch">
-                                {/* Step Card */}
-                                <motion.div
-                                    variants={cardVariants}
-                                    className="methodology-card group relative p-6 rounded-2xl bg-gradient-to-b from-[#12121a] to-[#0d0d14] border border-gray-800/50 flex-1 mx-3 overflow-hidden transition-all duration-500 hover:border-[#5EA5F4]/50"
-                                    whileHover={{
-                                        y: -8,
-                                        transition: { type: 'spring', stiffness: 300 }
-                                    }}
-                                >
-                                    {/* Glow effect on hover */}
-                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[#5EA5F4]/0 via-[#5EA5F4]/0 to-[#5EA5F4]/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
-                                    <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[#5EA5F4]/0 to-[#5EA5F4]/0 opacity-0 group-hover:from-[#5EA5F4]/20 group-hover:to-[#5EA5F4]/10 transition-all duration-500" />
+                            <motion.div
+                                key={step.id}
+                                variants={cardVariants}
+                                className="neumorphic-card p-8 flex flex-col h-full relative transition-transform duration-300 hover:-translate-y-2"
+                            >
+                                {/* Step Number Badge (Inset) */}
+                                <div className="absolute top-6 right-6 w-10 h-10 rounded-full neumorphic-inset flex items-center justify-center text-xs font-bold text-[#00d4ff]">
+                                    {String(index + 1).padStart(2, '0')}
+                                </div>
 
-                                    {/* Step Number Badge */}
-                                    <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-800/80 border border-gray-700/50 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:text-[#5EA5F4] group-hover:border-[#5EA5F4]/50 transition-all duration-300">
-                                        {String(index + 1).padStart(2, '0')}
-                                    </div>
+                                {/* Icon Button (Outward) */}
+                                <div className="neumorphic-icon-btn mb-6 pointer-events-none">
+                                    <step.icon size={24} className="text-[#00d4ff]" />
+                                </div>
 
-                                    {/* Icon */}
-                                    <div className="relative mb-5">
-                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-b from-[#5EA5F4]/20 to-[#5EA5F4]/10 border border-[#5EA5F4]/30 flex items-center justify-center group-hover:from-[#5EA5F4]/30 group-hover:to-[#5EA5F4]/20 group-hover:border-[#5EA5F4]/50 group-hover:shadow-[0_0_30px_rgba(94,165,244,0.3)] transition-all duration-500">
-                                            <step.icon size={26} className="text-[#5EA5F4] group-hover:text-[#8ac2ff] transition-colors duration-300" />
-                                        </div>
-                                    </div>
+                                {/* Title with Letter */}
+                                <h3 className="text-xl font-semibold text-[#f5f5f7] mb-4">
+                                    <span className="text-[#00d4ff] opacity-90">{step.letter}</span> - {step.title}
+                                </h3>
 
-                                    {/* Title with Letter */}
-                                    <h3 className="text-lg font-bold text-white mb-3 group-hover:text-[#5EA5F4] transition-colors duration-300">
-                                        <span className="text-[#5EA5F4] group-hover:text-[#8ac2ff]">{step.letter}</span> - {step.title}
-                                    </h3>
-
-                                    {/* Description */}
-                                    <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors duration-300">
-                                        {step.description}
-                                    </p>
-
-                                    {/* Bottom glow line */}
-                                    <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#5EA5F4]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                </motion.div>
-
-                                {/* Connector (except for last item) */}
-                                {index < methodologySteps.length - 1 && (
-                                    <motion.div
-                                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 flex items-center"
-                                        variants={connectorVariants}
-                                    >
-                                        <div className="relative">
-                                            {/* Connector line */}
-                                            <div className="w-6 h-px bg-gradient-to-r from-[#5EA5F4]/60 via-[#5EA5F4]/60 to-[#5EA5F4]/60 connector-pulse" />
-                                            {/* Connector dot */}
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#5EA5F4] shadow-[0_0_10px_rgba(94,165,244,0.6)]" />
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Mobile/Tablet: Vertical layout with connectors */}
-                    <div className="lg:hidden flex flex-col gap-6">
-                        {methodologySteps.map((step, index) => (
-                            <div key={step.id} className="relative">
-                                <motion.div
-                                    variants={cardVariants}
-                                    className="methodology-card group relative p-6 rounded-2xl bg-gradient-to-b from-[#12121a] to-[#0d0d14] border border-gray-800/50 overflow-hidden transition-all duration-500"
-                                >
-                                    {/* Glow effect on hover */}
-                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[#5EA5F4]/0 to-[#5EA5F4]/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
-
-                                    <div className="flex items-start gap-4">
-                                        {/* Icon */}
-                                        <div className="shrink-0">
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-b from-[#5EA5F4]/20 to-[#5EA5F4]/10 border border-[#5EA5F4]/30 flex items-center justify-center group-hover:shadow-[0_0_30px_rgba(94,165,244,0.3)] transition-all duration-500">
-                                                <step.icon size={26} className="text-[#5EA5F4]" />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex-1">
-                                            {/* Step Badge */}
-                                            <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-800/80 border border-gray-700/50 text-gray-400 mb-2">
-                                                Étape {index + 1}
-                                            </div>
-
-                                            {/* Title */}
-                                            <h3 className="text-lg font-bold text-white mb-2">
-                                                <span className="text-[#5EA5F4]">{step.letter}</span> - {step.title}
-                                            </h3>
-
-                                            {/* Description */}
-                                            <p className="text-gray-400 text-sm leading-relaxed">
-                                                {step.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-
-                                {/* Vertical Connector */}
-                                {index < methodologySteps.length - 1 && (
-                                    <motion.div
-                                        className="flex justify-center py-2"
-                                        initial={{ opacity: 0, scaleY: 0 }}
-                                        whileInView={{ opacity: 1, scaleY: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 0.4, delay: 0.2 }}
-                                    >
-                                        <div className="relative h-8">
-                                            {/* Vertical connector line */}
-                                            <div className="w-px h-full bg-gradient-to-b from-[#5EA5F4]/60 via-[#5EA5F4]/60 to-[#5EA5F4]/60" />
-                                            {/* Connector dot */}
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full bg-[#5EA5F4] shadow-[0_0_10px_rgba(94,165,244,0.6)]" />
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </div>
+                                {/* Description */}
+                                <p className="text-[#8e8e93] text-sm leading-relaxed">
+                                    {step.description}
+                                </p>
+                            </motion.div>
                         ))}
                     </div>
                 </motion.div>
@@ -241,3 +145,4 @@ export const Methodology: React.FC = () => {
         </section>
     );
 };
+

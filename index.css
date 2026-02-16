@@ -1,176 +1,276 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Global Typography & Colors */
+:root {
+  /* iPhone Dark Mode Palette */
+  --bg-base: #1c1c1e;
+  --bg-surface: #2c2c2e;
+  --bg-elevated: #3a3a3c;
+
+  --accent-cyan: #00d4ff;
+  --accent-purple: #a855f7;
+  --accent-pink: #ec4899;
+  --accent-green: #34d399;
+
+  --text-primary: #f5f5f7;
+  --text-secondary: #8e8e93;
+  --text-muted: #636366;
+
+  /* Dark Neumorphic Shadows — subtle like the reference */
+  --shadow-raised: 6px 6px 12px rgba(0, 0, 0, 0.5), -6px -6px 12px rgba(255, 255, 255, 0.03);
+  --shadow-pressed: inset 3px 3px 6px rgba(0, 0, 0, 0.5), inset -3px -3px 6px rgba(255, 255, 255, 0.03);
+  --shadow-hover: 8px 8px 16px rgba(0, 0, 0, 0.5), -8px -8px 16px rgba(255, 255, 255, 0.04);
+
+  /* Gradients */
+  --gradient-accent: linear-gradient(135deg, #00d4ff, #a855f7);
+  --gradient-surface: linear-gradient(145deg, #2c2c2e, #232325);
+}
+
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #fdfbf7;
-  /* Cream/Off-White */
-  color: #4B5563;
-  /* Gray 600 */
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
   overflow-x: hidden;
   line-height: 1.6;
 }
 
-/* Headings */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  color: #111827;
-  /* Gray 900 */
+/* --- Transitions --- */
+
+.neumorphic-card,
+.neumorphic-inset,
+.neumorphic-btn-primary,
+.neumorphic-btn-secondary,
+.neumorphic-icon-btn,
+.neumorphic-chip {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-p,
-span,
-li,
-a {
-  font-family: 'Inter', sans-serif;
+/* Card (Raised) */
+.neumorphic-card {
+  border-radius: 1.5rem;
+  background: var(--gradient-surface);
+  box-shadow: var(--shadow-raised);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-/* New Deep Tech Gradients */
-.text-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.neumorphic-card:hover {
+  box-shadow: var(--shadow-hover);
 }
 
-.text-gradient-ai {
-  background: linear-gradient(90deg, #818cf8 0%, #22d3ee 100%);
-  /* Indigo-400 to Cyan-400 */
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-size: 200% auto;
-  animation: shimmer 4s ease-in-out infinite alternate;
+/* Inset (Pressed) */
+.neumorphic-inset {
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-pressed);
+  background: var(--bg-base);
+  border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-.bg-gradient-ai-bottom {
-  background: linear-gradient(90deg, #818cf8 0%, #22d3ee 100%);
-  background-size: 200% auto;
-  animation: shimmer 4s ease-in-out infinite alternate;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  100% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Glassmorphism Utilities */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.glass-nav {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
-  /* Gray 200 */
-}
-
-/* Animations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* Marquee for logos */
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.marquee-container {
-  display: flex;
-  width: max-content;
-  animation: marquee 40s linear infinite;
-}
-
-.marquee-track {
-  display: flex;
-  gap: 60px;
-  padding: 8px 30px;
-  flex-shrink: 0;
-}
-
-/* Service Card Hover Effects */
-.card-gradient-hover {
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.card-gradient-hover:hover {
-  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.15);
-  /* Indigo glow */
-  border-color: rgba(99, 102, 241, 0.3);
-}
-
-/* Utility for Service Icons */
-.ai-icon-container {
-  background: rgba(79, 70, 229, 0.1);
-  border: 1px solid rgba(79, 70, 229, 0.2);
-  border-radius: 12px;
-  padding: 12px;
+/* Primary Button — gradient CTA */
+.neumorphic-btn-primary {
+  border-radius: 1rem;
+  background: var(--gradient-accent);
+  box-shadow: var(--shadow-raised);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.ai-icon-container svg {
-  color: #4f46e5;
-  /* Indigo 600 */
+.neumorphic-btn-primary:hover {
+  box-shadow: var(--shadow-hover), 0 0 20px rgba(0, 212, 255, 0.25);
+  transform: translateY(-1px);
 }
 
-/* Tech Logo Styling for Light Mode */
-.tech-logo {
+.neumorphic-btn-primary:active {
+  box-shadow: var(--shadow-pressed);
+  transform: scale(0.97);
+}
+
+/* Secondary Button — dark surface */
+.neumorphic-btn-secondary {
+  border-radius: 1rem;
+  box-shadow: var(--shadow-raised);
+  color: var(--text-primary);
+  background: var(--gradient-surface);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.neumorphic-btn-secondary:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.neumorphic-btn-secondary:active {
+  box-shadow: var(--shadow-pressed);
+  transform: scale(0.97);
+}
+
+/* Icon Buttons — like the play/pause reference */
+.neumorphic-icon-btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.875rem;
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--gradient-surface);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neumorphic-icon-btn:hover {
+  color: var(--accent-cyan);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.neumorphic-icon-btn:active {
+  box-shadow: var(--shadow-pressed);
+  transform: scale(0.97);
+}
+
+/* Big circular neumorphic button — like the play button in the reference */
+.neo-circle-btn {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: var(--gradient-surface);
+  box-shadow:
+    8px 8px 16px rgba(0, 0, 0, 0.6),
+    -8px -8px 16px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 1rem;
-  color: #6B7280;
-  /* Gray 500 */
-  white-space: nowrap;
-  transition: all 0.3s ease;
-  filter: grayscale(100%);
-  opacity: 0.7;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.tech-logo:hover {
-  color: #111827;
-  /* Gray 900 */
-  filter: grayscale(0%);
-  opacity: 1;
-  transform: scale(1.05);
+.neo-circle-btn:hover {
+  box-shadow:
+    10px 10px 20px rgba(0, 0, 0, 0.6),
+    -10px -10px 20px rgba(255, 255, 255, 0.05);
+  color: var(--accent-cyan);
+}
+
+.neo-circle-btn:active {
+  box-shadow: var(--shadow-pressed);
+  transform: scale(0.95);
+}
+
+/* Gradient Text */
+.text-gradient-accent {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Navbar Container */
+.neumorphic-nav-container {
+  border-radius: 9999px;
+  background: var(--bg-base);
+  box-shadow: var(--shadow-pressed);
+  padding: 0.35rem;
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.neumorphic-nav-item {
+  border-radius: 9999px;
+  padding: 0.4rem 1.25rem;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.neumorphic-nav-item:hover {
+  color: var(--text-primary);
+  background: var(--gradient-surface);
+  box-shadow: var(--shadow-raised);
+}
+
+.neumorphic-nav-item:active {
+  box-shadow: var(--shadow-pressed);
+}
+
+/* Chip */
+.neumorphic-chip {
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-raised);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--gradient-surface);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.875rem;
+}
+
+/* Typography */
+h1 {
+  font-family: 'Syne', sans-serif;
+  color: var(--text-primary);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-family: 'Syne', sans-serif;
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h4, h5, h6 {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+p {
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+/* Marquee */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll {
+  display: flex;
+  width: max-content;
+  animation: scroll 20s linear infinite;
 }

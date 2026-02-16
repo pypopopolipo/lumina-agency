@@ -1,0 +1,1098 @@
+#!/bin/bash
+# ClaudeShot - Cross-platform Screenshot Tool
+# Usage: screenshot [OPTIONS] [PROMPT]
+#
+# Supports: macOS, Linux (X11/Wayland), Windows (via Git Bash/WSL)
+# Web screenshots require: Chrome + Python 3
+#
+# Options:
+#   -m, --mode MODE       Capture mode: selection (default), window, full
+#   -ht, --hide-terminal  Hide terminal window during capture (macOS only)
+#   -d, --delay SECS      Delay before capture (for menus/tooltips)
+#   -c, --clipboard       Also copy screenshot to clipboard
+#   -o, --output PATH     Custom output path
+#   -t, --tmp             Save to /tmp instead of .claudeshots
+#   -q, --quiet           Only output the file path, no other messages
+#   -l, --list            List recent screenshots
+#   --small               Resize to 1280px width (saves tokens)
+#   --tiny                Resize to 640px width (max token savings)
+#   --resize WxH          Resize to specific dimensions (e.g., 800x600)
+#   --jpeg                Save as JPEG instead of PNG (smaller files)
+#   --web URL             Full-page screenshot of a webpage
+#   --web-width PX        Browser width for web screenshots (default: 1280)
+#   --web-height PX       Browser viewport height (default: 800)
+#   --web-full            Capture full scrollable page (default for --web)
+#   --web-viewport        Capture only visible viewport
+#   --mobile              Mobile viewport (390x844 - iPhone 14)
+#   --tablet              Tablet viewport (768x1024 - iPad)
+#   --viewport WxH        Custom viewport (e.g., 375x667)
+#   --fullpage            Capture full scrollable page (default for --web)
+#   --dom                 Capture page HTML/DOM alongside screenshot (web only)
+#   --clear               Clear all screenshots from current session (with confirmation)
+#   --clear-yes           Clear all session screenshots without confirmation
+#   --cleanup             Delete screenshots older than 1 hour
+#   --open                Open .claudeshots folder in file manager
+#   -h, --help            Show this help message
+#
+# Screenshots are saved to .claudeshots/ in the current directory by default.
+# Create .claudeshot.conf in project root to set defaults.
+#
+# Examples:
+#   screenshot                           # Interactive selection -> .claudeshots/
+#   screenshot -m full -ht               # Full screen, hide terminal
+#   screenshot -m full --small           # Full screen, resized for fewer tokens
+#   screenshot --tiny                    # Selection, max compression
+#   screenshot --jpeg                    # Save as JPEG (smaller file size)
+#   screenshot --web http://localhost:3000              # Full-page web screenshot
+#   screenshot --web http://localhost:3000 --mobile     # Mobile viewport
+#   screenshot --web http://localhost:3000 --tablet     # Tablet viewport
+#   screenshot -t                        # Save to /tmp instead
+#   screenshot -d 3 -m full              # 3 second delay, then full screen
+#   screenshot "fix this button"         # Screenshot with context for Claude
+#   screenshot -l                        # List screenshots
+#   screenshot --clear                   # Clear session screenshots (asks first)
+#   screenshot --open                    # Open .claudeshots in file manager
+
+set -e
+
+# Security: validate inputs
+validate_path() {
+    local path="$1"
+    # Block obvious injection attempts
+    if [[ "$path" == *"'"* ]] || [[ "$path" == *'"'* ]] || [[ "$path" == *'$('* ]] || [[ "$path" == *'`'* ]] || [[ "$path" == *';'* ]]; then
+        echo "Error: Invalid characters in path" >&2
+        exit 1
+    fi
+}
+
+validate_number() {
+    local num="$1"
+    if ! [[ "$num" =~ ^[0-9]+$ ]]; then
+        echo "Error: Expected number, got: $num" >&2
+        exit 1
+    fi
+}
+
+validate_url() {
+    local url="$1"
+    # Must start with http:// or https://
+    if ! [[ "$url" =~ ^https?:// ]]; then
+        echo "Error: URL must start with http:// or https://" >&2
+        exit 1
+    fi
+    # Block shell metacharacters
+    if [[ "$url" == *'$('* ]] || [[ "$url" == *'`'* ]] || [[ "$url" == *';'* ]]; then
+        echo "Error: Invalid characters in URL" >&2
+        exit 1
+    fi
+}
+
+# Security: check directory is safe (not a symlink to somewhere else)
+check_safe_directory() {
+    local dir="$1"
+    if [[ -L "$dir" ]]; then
+        echo "Error: $dir is a symlink. Refusing to use for safety." >&2
+        exit 1
+    fi
+}
+
+# Security: check file is safe to delete (is a real file, not a symlink, and is a screenshot)
+safe_to_delete() {
+    local file="$1"
+    # Must exist
+    [[ -e "$file" ]] || return 1
+    # Must not be a symlink
+    [[ -L "$file" ]] && return 1
+    # Must be a regular file
+    [[ -f "$file" ]] || return 1
+    # Must end in .png or .jpg
+    [[ "$file" == *.png || "$file" == *.jpg ]] || return 1
+    # Must be in allowed locations
+    case "$file" in
+        .claudeshots/*.png|.claudeshots/*.jpg) return 0 ;;
+        /tmp/claude-screenshot-*.png|/tmp/claude-screenshot-*.jpg) return 0 ;;
+        "$TEMP_DIR"/claude-screenshot-*.png|"$TEMP_DIR"/claude-screenshot-*.jpg) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Security: check output path is safe
+validate_output_path() {
+    local path="$1"
+    # Block writing to sensitive locations
+    case "$path" in
+        /etc/*|/usr/*|/bin/*|/sbin/*|/var/*|/System/*|/Library/*)
+            echo "Error: Cannot write to system directory: $path" >&2
+            exit 1
+            ;;
+        ~/.*|/home/*/.*|/Users/*/.*)
+            # Hidden files in home - block dotfiles but allow .claudeshots
+            if [[ "$path" != */.claudeshots/* ]]; then
+                echo "Error: Cannot overwrite dotfiles: $path" >&2
+                exit 1
+            fi
+            ;;
+    esac
+    # Warn if overwriting existing file outside our directories
+    if [[ -e "$path" ]]; then
+        case "$path" in
+            .claudeshots/*|/tmp/claude-screenshot-*|"$TEMP_DIR"/claude-screenshot-*)
+                # Our directories, OK to overwrite
+                ;;
+            *)
+                echo "Error: File already exists: $path (use .claudeshots/ or /tmp)" >&2
+                exit 1
+                ;;
+        esac
+    fi
+}
+
+# Detect OS
+detect_os() {
+    case "$(uname -s)" in
+        Darwin*)    echo "macos" ;;
+        Linux*)
+            if grep -qi microsoft /proc/version 2>/dev/null; then
+                echo "wsl"
+            else
+                echo "linux"
+            fi
+            ;;
+        CYGWIN*|MINGW*|MSYS*)    echo "windows" ;;
+        *)          echo "unknown" ;;
+    esac
+}
+
+OS=$(detect_os)
+
+# Determine temp directory based on OS
+get_temp_dir() {
+    case "$OS" in
+        windows|wsl)
+            if [[ -n "$TEMP" ]]; then
+                echo "$TEMP"
+            elif [[ -n "$TMP" ]]; then
+                echo "$TMP"
+            else
+                echo "/tmp"
+            fi
+            ;;
+        *)
+            echo "/tmp"
+            ;;
+    esac
+}
+
+TEMP_DIR=$(get_temp_dir)
+
+# Screenshot directory
+SCREENSHOT_DIR=".claudeshots"
+USE_TMP=false
+
+# Session file tracks all screenshots - cleared with --clear
+SESSION_LOG="${SCREENSHOT_DIR}/.session.log"
+
+MODE="selection"
+HIDE_TERMINAL=false
+OUTPUT=""
+QUIET=false
+DELAY=0
+CLIPBOARD=false
+PROMPT=""
+RESIZE=""
+WEB_URL=""
+WEB_WIDTH=1280
+WEB_HEIGHT=800
+WEB_FULL_PAGE=true
+CAPTURE_DOM=false  # Capture page HTML alongside screenshot
+FORMAT="png"  # Output format: png or jpeg
+
+# Load defaults from config file if it exists (safe parsing, no code execution)
+CONFIG_FILE=".claudeshot.conf"
+if [[ -f "$CONFIG_FILE" ]]; then
+    while IFS='=' read -r key value; do
+        # Skip comments and empty lines
+        [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+        # Remove quotes from value
+        value="${value%\"}"
+        value="${value#\"}"
+        value="${value%\'}"
+        value="${value#\'}"
+        # Only allow known config keys
+        case "$key" in
+            MODE|RESIZE|WEB_WIDTH|WEB_HEIGHT|WEB_FULL_PAGE|QUIET|CLIPBOARD|USE_TMP)
+                declare "$key=$value"
+                ;;
+        esac
+    done < "$CONFIG_FILE"
+fi
+
+# Open file manager
+open_folder() {
+    local folder="$1"
+    case "$OS" in
+        macos)      open "$folder" ;;
+        linux)      xdg-open "$folder" 2>/dev/null || nautilus "$folder" 2>/dev/null || dolphin "$folder" 2>/dev/null ;;
+        wsl)        explorer.exe "$(wslpath -w "$folder")" ;;
+        windows)    explorer "$folder" ;;
+    esac
+}
+
+# Find available screenshot tool on Linux
+find_linux_screenshot_tool() {
+    local tools=("gnome-screenshot" "scrot" "maim" "spectacle" "import" "grim")
+    for tool in "${tools[@]}"; do
+        if command -v "$tool" &>/dev/null; then
+            echo "$tool"
+            return 0
+        fi
+    done
+    echo ""
+    return 1
+}
+
+# Check if running under Wayland
+is_wayland() {
+    [[ -n "$WAYLAND_DISPLAY" ]] || [[ "$XDG_SESSION_TYPE" == "wayland" ]]
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -m|--mode)
+            MODE="$2"
+            shift 2
+            ;;
+        -ht|--hide-terminal)
+            HIDE_TERMINAL=true
+            shift
+            ;;
+        -d|--delay)
+            validate_number "$2"
+            DELAY="$2"
+            shift 2
+            ;;
+        -c|--clipboard)
+            CLIPBOARD=true
+            shift
+            ;;
+        -o|--output)
+            validate_path "$2"
+            validate_output_path "$2"
+            OUTPUT="$2"
+            shift 2
+            ;;
+        -t|--tmp)
+            USE_TMP=true
+            shift
+            ;;
+        -q|--quiet)
+            QUIET=true
+            shift
+            ;;
+        --small)
+            RESIZE="1280"
+            shift
+            ;;
+        --tiny)
+            RESIZE="640"
+            shift
+            ;;
+        --resize)
+            # Validate resize: either number or WxH format
+            if [[ "$2" == *x* ]]; then
+                local rw="${2%x*}" rh="${2#*x}"
+                validate_number "$rw"
+                validate_number "$rh"
+            else
+                validate_number "$2"
+            fi
+            RESIZE="$2"
+            shift 2
+            ;;
+        --web)
+            validate_url "$2"
+            WEB_URL="$2"
+            shift 2
+            ;;
+        --web-width)
+            validate_number "$2"
+            WEB_WIDTH="$2"
+            shift 2
+            ;;
+        --web-height)
+            validate_number "$2"
+            WEB_HEIGHT="$2"
+            shift 2
+            ;;
+        --web-full)
+            WEB_FULL_PAGE=true
+            shift
+            ;;
+        --web-viewport)
+            WEB_FULL_PAGE=false
+            shift
+            ;;
+        --mobile)
+            WEB_WIDTH=390
+            WEB_HEIGHT=844
+            shift
+            ;;
+        --tablet)
+            WEB_WIDTH=768
+            WEB_HEIGHT=1024
+            shift
+            ;;
+        --viewport)
+            if [[ "$2" == *x* ]]; then
+                WEB_WIDTH="${2%x*}"
+                WEB_HEIGHT="${2#*x}"
+                validate_number "$WEB_WIDTH"
+                validate_number "$WEB_HEIGHT"
+            else
+                echo "Error: --viewport requires WxH format (e.g., 375x667)" >&2
+                exit 1
+            fi
+            shift 2
+            ;;
+        --fullpage)
+            WEB_FULL_PAGE=true
+            shift
+            ;;
+        --dom)
+            CAPTURE_DOM=true
+            shift
+            ;;
+        --jpeg)
+            FORMAT="jpeg"
+            shift
+            ;;
+        --open)
+            if [[ -d "$SCREENSHOT_DIR" ]]; then
+                open_folder "$SCREENSHOT_DIR"
+                echo "Opened $SCREENSHOT_DIR"
+            else
+                echo "No .claudeshots folder exists yet. Take a screenshot first!"
+            fi
+            exit 0
+            ;;
+        -l|--list)
+            echo "Project screenshots (.claudeshots/):"
+            if [[ -d "$SCREENSHOT_DIR" ]]; then
+                ls -lt "$SCREENSHOT_DIR"/*.png "$SCREENSHOT_DIR"/*.jpg 2>/dev/null | head -10 | awk '{print "  " $NF " (" $6, $7, $8 ")"}' || echo "  (none yet)"
+            else
+                echo "  (none yet)"
+            fi
+            echo ""
+            echo "Temp screenshots:"
+            ls -lt "$TEMP_DIR"/claude-screenshot-*.png "$TEMP_DIR"/claude-screenshot-*.jpg 2>/dev/null | head -5 | awk '{print "  " $NF " (" $6, $7, $8 ")"}' || echo "  (none)"
+            if [[ -f "$SESSION_LOG" ]]; then
+                echo ""
+                echo "Session screenshots ($(wc -l < "$SESSION_LOG" | tr -d ' ') files):"
+                while IFS= read -r f; do
+                    if [[ -f "$f" ]]; then
+                        echo "  $f"
+                    fi
+                done < "$SESSION_LOG"
+            fi
+            exit 0
+            ;;
+        --clear)
+            if [[ ! -f "$SESSION_LOG" ]]; then
+                echo "No session screenshots to clear"
+                exit 0
+            fi
+            # Safety: only process files that pass all safety checks
+            SAFE_FILES=()
+            while IFS= read -r f; do
+                if safe_to_delete "$f"; then
+                    SAFE_FILES+=("$f")
+                fi
+            done < "$SESSION_LOG"
+
+            if [[ ${#SAFE_FILES[@]} -eq 0 ]]; then
+                echo "No session screenshots to clear"
+                rm -f "$SESSION_LOG"
+                exit 0
+            fi
+
+            echo "This will delete ${#SAFE_FILES[@]} screenshot(s) from this session:"
+            for f in "${SAFE_FILES[@]}"; do
+                echo "  $f"
+            done
+            echo ""
+            read -p "Delete these files? [y/N] " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                for f in "${SAFE_FILES[@]}"; do
+                    # Double-check before each delete
+                    if safe_to_delete "$f"; then
+                        rm "$f"
+                    fi
+                done
+                rm -f "$SESSION_LOG"
+                echo "Cleared ${#SAFE_FILES[@]} session screenshots"
+            else
+                echo "Cancelled"
+            fi
+            exit 0
+            ;;
+        --clear-yes)
+            if [[ ! -f "$SESSION_LOG" ]]; then
+                echo "No session screenshots to clear"
+                exit 0
+            fi
+            COUNT=0
+            while IFS= read -r f; do
+                if safe_to_delete "$f"; then
+                    rm "$f"
+                    ((COUNT++))
+                fi
+            done < "$SESSION_LOG"
+            rm -f "$SESSION_LOG"
+            echo "Cleared $COUNT session screenshots"
+            exit 0
+            ;;
+        --cleanup)
+            COUNT=$(find "$TEMP_DIR" \( -name "claude-screenshot-*.png" -o -name "claude-screenshot-*.jpg" \) -mmin +60 2>/dev/null | wc -l | tr -d ' ')
+            find "$TEMP_DIR" \( -name "claude-screenshot-*.png" -o -name "claude-screenshot-*.jpg" \) -mmin +60 -delete 2>/dev/null || true
+            echo "Cleaned up $COUNT old screenshots"
+            exit 0
+            ;;
+        -h|--help)
+            head -30 "$0" | tail -29 | sed 's/^# //' | sed 's/^#//'
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            echo "Run with --help to see available options." >&2
+            exit 1
+            ;;
+        *)
+            PROMPT="$1"
+            shift
+            ;;
+    esac
+done
+
+# Check JPEG support on Linux/WSL - graceful fallback
+if [[ "$FORMAT" == "jpeg" ]] && [[ "$OS" == "linux" || "$OS" == "wsl" ]]; then
+    # Linux screenshot tools output PNG, need ImageMagick to convert
+    if ! command -v convert &>/dev/null && ! command -v magick &>/dev/null; then
+        if [[ "$QUIET" != true ]]; then
+            echo "Note: ImageMagick not found. Saving as PNG instead." >&2
+            echo "Install with: sudo apt install imagemagick" >&2
+        fi
+        FORMAT="png"
+    fi
+fi
+
+# Determine file extension based on format
+if [[ "$FORMAT" == "jpeg" ]]; then
+    EXT="jpg"
+else
+    EXT="png"
+fi
+
+# Generate output path if not specified
+if [[ -z "$OUTPUT" ]]; then
+    if [[ "$USE_TMP" == true ]]; then
+        OUTPUT="$TEMP_DIR/claude-screenshot-$(date +%s).$EXT"
+        SESSION_LOG="$TEMP_DIR/claude-screenshot-session.log"
+    else
+        # Security: check if .claudeshots is a symlink
+        if [[ -L "$SCREENSHOT_DIR" ]]; then
+            echo "Error: $SCREENSHOT_DIR is a symlink. Refusing to use for safety." >&2
+            OUTPUT="$TEMP_DIR/claude-screenshot-$(date +%s).$EXT"
+            SESSION_LOG="$TEMP_DIR/claude-screenshot-session.log"
+        else
+            mkdir -p "$SCREENSHOT_DIR" 2>/dev/null
+        fi
+        if [[ -d "$SCREENSHOT_DIR" ]] && [[ ! -L "$SCREENSHOT_DIR" ]]; then
+            OUTPUT="${SCREENSHOT_DIR}/screenshot-$(date +%Y%m%d-%H%M%S).$EXT"
+            SESSION_LOG="${SCREENSHOT_DIR}/.session.log"
+        else
+            OUTPUT="$TEMP_DIR/claude-screenshot-$(date +%s).$EXT"
+            SESSION_LOG="$TEMP_DIR/claude-screenshot-session.log"
+            if [[ "$QUIET" != true ]]; then
+                echo "Note: Saving to $TEMP_DIR (couldn't create .claudeshots/ here)" >&2
+                echo "Tip: Run from a directory where you have write permission." >&2
+            fi
+        fi
+    fi
+fi
+
+# Hide terminal if requested (macOS only)
+# Uses visibility toggle instead of minimize to avoid dock animation
+if [[ "$HIDE_TERMINAL" == true ]] && [[ "$OS" == "macos" ]]; then
+    osascript -e 'tell application "System Events" to set visible of process "Terminal" to false' 2>/dev/null || true
+    sleep 0.2
+fi
+
+# Apply delay if specified
+if [[ "$DELAY" -gt 0 ]]; then
+    if [[ "$QUIET" != true ]]; then
+        echo "Capturing in $DELAY seconds..."
+    fi
+    sleep "$DELAY"
+fi
+
+# Capture screenshot based on OS and mode
+capture_screenshot() {
+    local mode="$1"
+    local output="$2"
+
+    case "$OS" in
+        macos)
+            capture_macos "$mode" "$output"
+            ;;
+        linux)
+            capture_linux "$mode" "$output"
+            ;;
+        wsl)
+            capture_wsl "$mode" "$output"
+            ;;
+        windows)
+            capture_windows "$mode" "$output"
+            ;;
+        *)
+            echo "Unsupported operating system: $OS" >&2
+            return 1
+            ;;
+    esac
+}
+
+capture_macos() {
+    local mode="$1"
+    local output="$2"
+    local format_flag=""
+
+    # Use -t flag for format (jpg for jpeg, png for png)
+    if [[ "$FORMAT" == "jpeg" ]]; then
+        format_flag="-t jpg"
+    fi
+
+    case "$mode" in
+        selection)  screencapture -i $format_flag "$output" 2>/dev/null ;;
+        window)     screencapture -i -w $format_flag "$output" 2>/dev/null ;;
+        full)       screencapture $format_flag "$output" 2>/dev/null ;;
+        *)
+            echo "Unknown mode: $mode (use: selection, window, full)" >&2
+            return 1
+            ;;
+    esac
+}
+
+capture_linux() {
+    local mode="$1"
+    local output="$2"
+    local tool
+
+    tool=$(find_linux_screenshot_tool)
+    if [[ -z "$tool" ]]; then
+        echo "Error: No screenshot tool found." >&2
+        echo "" >&2
+        echo "Install one of these:" >&2
+        echo "  Ubuntu/Debian: sudo apt install gnome-screenshot" >&2
+        echo "  Fedora: sudo dnf install gnome-screenshot" >&2
+        echo "  Arch: sudo pacman -S scrot" >&2
+        echo "  Wayland: sudo apt install grim slurp" >&2
+        return 1
+    fi
+
+    if [[ "$QUIET" != true ]]; then
+        echo "Using $tool for capture..." >&2
+    fi
+
+    case "$tool" in
+        gnome-screenshot)
+            case "$mode" in
+                selection)  gnome-screenshot -a -f "$output" ;;
+                window)     gnome-screenshot -w -f "$output" ;;
+                full)       gnome-screenshot -f "$output" ;;
+            esac
+            ;;
+        scrot)
+            case "$mode" in
+                selection)  scrot -s "$output" ;;
+                window)     scrot -u "$output" ;;
+                full)       scrot "$output" ;;
+            esac
+            ;;
+        maim)
+            case "$mode" in
+                selection)  maim -s "$output" ;;
+                window)     maim -i "$(xdotool getactivewindow)" "$output" ;;
+                full)       maim "$output" ;;
+            esac
+            ;;
+        spectacle)
+            case "$mode" in
+                selection)  spectacle -r -b -n -o "$output" ;;
+                window)     spectacle -a -b -n -o "$output" ;;
+                full)       spectacle -f -b -n -o "$output" ;;
+            esac
+            ;;
+        import)
+            # ImageMagick import
+            case "$mode" in
+                selection)  import "$output" ;;
+                window)     import -window "$(xdotool getactivewindow)" "$output" ;;
+                full)       import -window root "$output" ;;
+            esac
+            ;;
+        grim)
+            # Wayland (sway, etc.)
+            case "$mode" in
+                selection)
+                    if command -v slurp &>/dev/null; then
+                        grim -g "$(slurp)" "$output"
+                    else
+                        echo "Error: grim needs slurp for region selection." >&2
+                        echo "Install with: sudo apt install slurp" >&2
+                        return 1
+                    fi
+                    ;;
+                window)
+                    echo "Window mode not supported with grim. Using selection instead." >&2
+                    if command -v slurp &>/dev/null; then
+                        grim -g "$(slurp)" "$output"
+                    else
+                        return 1
+                    fi
+                    ;;
+                full)
+                    grim "$output"
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+capture_wsl() {
+    local mode="$1"
+    local output="$2"
+
+    # Convert to Windows path for PowerShell
+    local win_output
+    win_output=$(wslpath -w "$output")
+
+    case "$mode" in
+        full)
+            powershell.exe -NoProfile -Command "
+                Add-Type -AssemblyName System.Windows.Forms
+                \$screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+                \$bitmap = New-Object System.Drawing.Bitmap(\$screen.Width, \$screen.Height)
+                \$graphics = [System.Drawing.Graphics]::FromImage(\$bitmap)
+                \$graphics.CopyFromScreen(\$screen.Location, [System.Drawing.Point]::Empty, \$screen.Size)
+                \$bitmap.Save('$win_output')
+                \$graphics.Dispose()
+                \$bitmap.Dispose()
+            " 2>/dev/null
+            ;;
+        selection|window)
+            # Use SnippingTool for interactive modes
+            if [[ "$QUIET" != true ]]; then
+                echo "Opening Snipping Tool for interactive capture..." >&2
+                echo "Save the screenshot to: $win_output" >&2
+            fi
+            powershell.exe -NoProfile -Command "Start-Process SnippingTool" 2>/dev/null
+            echo "Note: Please save the screenshot manually to complete capture" >&2
+            return 1
+            ;;
+    esac
+}
+
+capture_windows() {
+    local mode="$1"
+    local output="$2"
+
+    case "$mode" in
+        full)
+            powershell -NoProfile -Command "
+                Add-Type -AssemblyName System.Windows.Forms
+                \$screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+                \$bitmap = New-Object System.Drawing.Bitmap(\$screen.Width, \$screen.Height)
+                \$graphics = [System.Drawing.Graphics]::FromImage(\$bitmap)
+                \$graphics.CopyFromScreen(\$screen.Location, [System.Drawing.Point]::Empty, \$screen.Size)
+                \$bitmap.Save('$output')
+                \$graphics.Dispose()
+                \$bitmap.Dispose()
+            " 2>/dev/null
+            ;;
+        selection|window)
+            if [[ "$QUIET" != true ]]; then
+                echo "Opening Snipping Tool for interactive capture..." >&2
+            fi
+            powershell -NoProfile -Command "Start-Process SnippingTool" 2>/dev/null
+            echo "Note: Please save the screenshot manually" >&2
+            return 1
+            ;;
+    esac
+}
+
+# Resize image function
+resize_image() {
+    local input="$1"
+    local size="$2"
+
+    # Parse size - can be just width (e.g., "1280") or WxH (e.g., "800x600")
+    local width height
+    if [[ "$size" == *x* ]]; then
+        width="${size%x*}"
+        height="${size#*x}"
+    else
+        width="$size"
+        height=""  # Proportional
+    fi
+
+    case "$OS" in
+        macos)
+            if [[ -n "$height" ]]; then
+                sips --resampleHeightWidth "$height" "$width" "$input" >/dev/null 2>&1
+            else
+                sips --resampleWidth "$width" "$input" >/dev/null 2>&1
+            fi
+            ;;
+        linux|wsl)
+            if command -v convert &>/dev/null; then
+                if [[ -n "$height" ]]; then
+                    convert "$input" -resize "${width}x${height}!" "$input"
+                else
+                    convert "$input" -resize "${width}x" "$input"
+                fi
+            elif command -v magick &>/dev/null; then
+                if [[ -n "$height" ]]; then
+                    magick "$input" -resize "${width}x${height}!" "$input"
+                else
+                    magick "$input" -resize "${width}x" "$input"
+                fi
+            else
+                echo "Warning: ImageMagick not found, skipping resize." >&2
+                echo "Install with: sudo apt install imagemagick" >&2
+            fi
+            ;;
+        windows)
+            # PowerShell resize
+            powershell -NoProfile -Command "
+                Add-Type -AssemblyName System.Drawing
+                \$img = [System.Drawing.Image]::FromFile('$input')
+                \$newWidth = $width
+                \$newHeight = if ('$height') { $height } else { [int](\$img.Height * ($width / \$img.Width)) }
+                \$bitmap = New-Object System.Drawing.Bitmap(\$newWidth, \$newHeight)
+                \$graphics = [System.Drawing.Graphics]::FromImage(\$bitmap)
+                \$graphics.DrawImage(\$img, 0, 0, \$newWidth, \$newHeight)
+                \$img.Dispose()
+                \$bitmap.Save('$input')
+                \$graphics.Dispose()
+                \$bitmap.Dispose()
+            " 2>/dev/null
+            ;;
+    esac
+}
+
+# Browser detection functions
+find_chrome() {
+    local cmd=""
+    if command -v google-chrome &>/dev/null; then
+        cmd="google-chrome"
+    elif command -v google-chrome-stable &>/dev/null; then
+        cmd="google-chrome-stable"
+    elif command -v chromium &>/dev/null; then
+        cmd="chromium"
+    elif command -v chromium-browser &>/dev/null; then
+        cmd="chromium-browser"
+    elif [[ "$OS" == "macos" ]]; then
+        if [[ -d "/Applications/Google Chrome.app" ]]; then
+            cmd="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        elif [[ -d "/Applications/Chromium.app" ]]; then
+            cmd="/Applications/Chromium.app/Contents/MacOS/Chromium"
+        fi
+    elif [[ "$OS" == "wsl" ]]; then
+        if [[ -f "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe" ]]; then
+            cmd="/mnt/c/Program Files/Google/Chrome/Application/chrome.exe"
+        elif [[ -f "/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe" ]]; then
+            cmd="/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+        fi
+    fi
+    # Windows (Git Bash / MSYS2 / MINGW)
+    if [[ -z "$cmd" ]]; then
+        if [[ -f "/c/Program Files/Google/Chrome/Application/chrome.exe" ]]; then
+            cmd="/c/Program Files/Google/Chrome/Application/chrome.exe"
+        elif [[ -f "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe" ]]; then
+            cmd="/c/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+        elif [[ -f "$LOCALAPPDATA/Google/Chrome/Application/chrome.exe" ]]; then
+            cmd="$LOCALAPPDATA/Google/Chrome/Application/chrome.exe"
+        fi
+    fi
+    if [[ -n "$cmd" ]] && [[ -x "$cmd" || -f "$cmd" ]]; then
+        echo "$cmd"
+        return 0
+    fi
+    return 1
+}
+
+
+# Capture page DOM/HTML alongside screenshot
+capture_dom() {
+    local url="$1"
+    local output="$2"
+
+    local browser_cmd
+    browser_cmd=$(find_chrome 2>/dev/null) || true
+
+    if [[ -n "$browser_cmd" ]]; then
+        # Chrome supports --dump-dom for JS-rendered HTML
+        "$browser_cmd" --headless --disable-gpu --dump-dom "$url" 2>/dev/null > "$output"
+    else
+        # Fallback: raw HTML via curl (won't have JS-rendered content)
+        if command -v curl &>/dev/null; then
+            curl -sL "$url" > "$output" 2>/dev/null
+        else
+            echo "Warning: Could not capture DOM (no Chrome or curl available)" >&2
+            return 1
+        fi
+    fi
+
+    if [[ -f "$output" ]] && [[ -s "$output" ]]; then
+        return 0
+    else
+        rm -f "$output" 2>/dev/null
+        return 1
+    fi
+}
+
+
+# Capture web page with Chrome/Edge (Chromium-based)
+capture_chromium() {
+    local browser_cmd="$1"
+    local url="$2"
+    local output="$3"
+    local width="$4"
+    local height="$5"
+    local full_page="$6"
+
+    # For full-page: use CDP (Chrome DevTools Protocol) to get actual page height
+    if [[ "$full_page" == true ]]; then
+        local cdp_script="${BASH_SOURCE[0]%/*}/cdp-screenshot.py"
+        local python_cmd=""
+        if [[ "$OS" == "windows" ]] && command -v py &>/dev/null && py --version &>/dev/null; then
+            python_cmd="py"
+        elif command -v python3 &>/dev/null && python3 --version &>/dev/null; then
+            python_cmd="python3"
+        elif command -v python &>/dev/null && python --version &>/dev/null; then
+            python_cmd="python"
+        elif command -v py &>/dev/null && py --version &>/dev/null; then
+            python_cmd="py"
+        fi
+        if [[ -f "$cdp_script" ]] && [[ -n "$python_cmd" ]]; then
+            local fmt="png"
+            [[ "$FORMAT" == "jpeg" ]] && fmt="jpg"
+            if "$python_cmd" "$cdp_script" "$url" "$output" "$width" "$fmt" 2>&1; then
+                return 0
+            fi
+            # CDP failed, fall through to viewport capture
+            if [[ "$QUIET" != true ]]; then
+                echo "CDP capture failed, using viewport capture..." >&2
+            fi
+        fi
+    fi
+
+    # Standard viewport capture (or fallback if CDP fails)
+    local args=(
+        --headless
+        --disable-gpu
+        --no-sandbox
+        --disable-dev-shm-usage
+        --hide-scrollbars
+        "--window-size=${width},${height}"
+        "--screenshot=$output"
+    )
+
+    if [[ "$full_page" == true ]]; then
+        args+=("--virtual-time-budget=5000")
+    fi
+
+    "$browser_cmd" "${args[@]}" "$url" 2>/dev/null
+}
+
+
+# Web screenshot function - Chrome only (via CDP for full-page support)
+capture_web() {
+    local url="$1"
+    local output="$2"
+    local width="$3"
+    local height="$4"
+    local full_page="$5"
+
+    local browser_cmd
+    browser_cmd=$(find_chrome 2>/dev/null) || true
+
+    if [[ -z "$browser_cmd" ]]; then
+        echo "Error: Chrome is required for web screenshots." >&2
+        echo "" >&2
+        show_chrome_install_help
+        return 1
+    fi
+
+    if [[ "$QUIET" != true ]]; then
+        echo "Capturing web page: $url" >&2
+    fi
+
+    capture_chromium "$browser_cmd" "$url" "$output" "$width" "$height" "$full_page"
+}
+
+# Show Chrome install help
+show_chrome_install_help() {
+    echo "Web screenshots require Chrome and Python 3." >&2
+    echo "" >&2
+    case "$OS" in
+        macos)
+            echo "Install Chrome: brew install --cask google-chrome" >&2
+            echo "Or download from: https://www.google.com/chrome/" >&2
+            ;;
+        linux)
+            echo "Install Chrome/Chromium:" >&2
+            echo "  Ubuntu/Debian: sudo apt install chromium-browser" >&2
+            echo "  Fedora: sudo dnf install chromium" >&2
+            echo "  Arch: sudo pacman -S chromium" >&2
+            ;;
+        wsl)
+            echo "Install Chrome on Windows: https://www.google.com/chrome/" >&2
+            ;;
+        *)
+            echo "Download Chrome: https://www.google.com/chrome/" >&2
+            ;;
+    esac
+}
+
+# Execute capture
+DOM_OUTPUT=""
+if [[ -n "$WEB_URL" ]]; then
+    # Web screenshot mode
+    capture_web "$WEB_URL" "$OUTPUT" "$WEB_WIDTH" "$WEB_HEIGHT" "$WEB_FULL_PAGE"
+    CAPTURE_EXIT=$?
+
+    # Capture DOM alongside screenshot if requested
+    if [[ "$CAPTURE_DOM" == true ]] && [[ "$CAPTURE_EXIT" -eq 0 || -f "$OUTPUT" ]]; then
+        DOM_OUTPUT="${OUTPUT%.*}.html"
+        if [[ "$QUIET" != true ]]; then
+            echo "Capturing page DOM..." >&2
+        fi
+        if capture_dom "$WEB_URL" "$DOM_OUTPUT"; then
+            if [[ "$QUIET" != true ]]; then
+                echo "DOM saved: $DOM_OUTPUT" >&2
+            fi
+        else
+            DOM_OUTPUT=""
+        fi
+    fi
+else
+    # Regular screenshot mode
+    # For Linux/WSL with JPEG: capture to temp PNG, then convert
+    if [[ "$FORMAT" == "jpeg" ]] && [[ "$OS" == "linux" || "$OS" == "wsl" ]]; then
+        TEMP_PNG="${OUTPUT%.jpg}.tmp.png"
+        capture_screenshot "$MODE" "$TEMP_PNG"
+        CAPTURE_EXIT=$?
+        # Convert temp PNG to JPEG if capture succeeded
+        if [[ -f "$TEMP_PNG" ]]; then
+            if command -v convert &>/dev/null; then
+                convert "$TEMP_PNG" -quality 85 "$OUTPUT" && rm -f "$TEMP_PNG"
+            elif command -v magick &>/dev/null; then
+                magick "$TEMP_PNG" -quality 85 "$OUTPUT" && rm -f "$TEMP_PNG"
+            fi
+        fi
+    else
+        capture_screenshot "$MODE" "$OUTPUT"
+        CAPTURE_EXIT=$?
+    fi
+fi
+
+# Restore terminal if it was hidden (macOS)
+if [[ "$HIDE_TERMINAL" == true ]] && [[ "$OS" == "macos" ]]; then
+    osascript -e 'tell application "System Events" to set visible of process "Terminal" to true' 2>/dev/null || true
+    osascript -e 'tell application "Terminal" to activate' 2>/dev/null || true
+fi
+
+# Check if screenshot was captured
+if [[ -f "$OUTPUT" ]]; then
+    # Resize if requested
+    if [[ -n "$RESIZE" ]]; then
+        if [[ "$QUIET" != true ]]; then
+            echo "Resizing to ${RESIZE}..." >&2
+        fi
+        resize_image "$OUTPUT" "$RESIZE"
+    fi
+
+    # Log to session file for later cleanup (limit to 1000 entries)
+    echo "$OUTPUT" >> "$SESSION_LOG"
+    if [[ -n "$DOM_OUTPUT" ]] && [[ -f "$DOM_OUTPUT" ]]; then
+        echo "$DOM_OUTPUT" >> "$SESSION_LOG"
+    fi
+    if [[ -f "$SESSION_LOG" ]] && [[ $(wc -l < "$SESSION_LOG") -gt 1000 ]]; then
+        tail -500 "$SESSION_LOG" > "$SESSION_LOG.tmp" && mv "$SESSION_LOG.tmp" "$SESSION_LOG"
+    fi
+
+    # Copy to clipboard if requested
+    if [[ "$CLIPBOARD" == true ]]; then
+        case "$OS" in
+            macos)
+                osascript -e "set the clipboard to (read (POSIX file \"$OUTPUT\") as TIFF picture)" 2>/dev/null
+                ;;
+            linux)
+                if command -v xclip &>/dev/null; then
+                    xclip -selection clipboard -t image/png -i "$OUTPUT" 2>/dev/null
+                elif command -v xsel &>/dev/null; then
+                    xsel --clipboard --input < "$OUTPUT" 2>/dev/null
+                elif command -v wl-copy &>/dev/null; then
+                    wl-copy < "$OUTPUT" 2>/dev/null
+                fi
+                ;;
+            wsl)
+                # WSL clipboard is complex, skip for now
+                ;;
+        esac
+        if [[ "$QUIET" != true ]]; then
+            echo "Copied to clipboard"
+        fi
+    fi
+
+    # Output results
+    if [[ "$QUIET" == true ]]; then
+        echo "$OUTPUT"
+        if [[ -n "$DOM_OUTPUT" ]] && [[ -f "$DOM_OUTPUT" ]]; then
+            echo "$DOM_OUTPUT"
+        fi
+        if [[ -n "$PROMPT" ]]; then
+            echo "$PROMPT"
+        fi
+    else
+        echo "Screenshot saved: $OUTPUT"
+        if [[ -n "$DOM_OUTPUT" ]] && [[ -f "$DOM_OUTPUT" ]]; then
+            echo "DOM saved: $DOM_OUTPUT"
+        fi
+        if [[ -n "$PROMPT" ]]; then
+            echo "Context: $PROMPT"
+        fi
+    fi
+    exit 0
+else
+    if [[ "$QUIET" != true ]]; then
+        echo "Screenshot was not saved." >&2
+        echo "" >&2
+        if [[ -n "$WEB_URL" ]]; then
+            echo "Tips for web screenshots:" >&2
+            echo "  - Make sure the URL is accessible" >&2
+            echo "  - Check if Chrome is installed (--web requires Chrome)" >&2
+            echo "  - Try a simpler URL first: --web https://example.com" >&2
+        else
+            echo "This usually means:" >&2
+            echo "  - You pressed Escape to cancel" >&2
+            echo "  - The capture window was closed" >&2
+            echo "  - There was a permission issue" >&2
+            echo "" >&2
+            echo "Try again with: /screenshot" >&2
+        fi
+    fi
+    exit 1
+fi

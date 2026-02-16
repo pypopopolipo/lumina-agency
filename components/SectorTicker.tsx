@@ -1,50 +1,36 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SectorTickerProps {
     words: string[];
 }
 
 export const SectorTicker: React.FC<SectorTickerProps> = ({ words }) => {
-    const [wordIndex, setWordIndex] = useState(0);
-    const [displayText, setDisplayText] = useState('');
-    const [isDeleting, setIsDeleting] = useState(false);
-
-    const typeSpeed = 80;
-    const deleteSpeed = 50;
-    const pauseDuration = 2000;
-
-    const handleTyping = useCallback(() => {
-        const currentWord = words[wordIndex];
-
-        if (!isDeleting) {
-            if (displayText.length < currentWord.length) {
-                setDisplayText(currentWord.substring(0, displayText.length + 1));
-            } else {
-                setTimeout(() => setIsDeleting(true), pauseDuration);
-                return;
-            }
-        } else {
-            if (displayText.length > 0) {
-                setDisplayText(currentWord.substring(0, displayText.length - 1));
-            } else {
-                setIsDeleting(false);
-                setWordIndex((prev) => (prev + 1) % words.length);
-            }
-        }
-    }, [displayText, isDeleting, wordIndex, words]);
+    const [index, setIndex] = useState(0);
 
     useEffect(() => {
-        const speed = isDeleting ? deleteSpeed : typeSpeed;
-        const timer = setTimeout(handleTyping, speed);
-        return () => clearTimeout(timer);
-    }, [handleTyping, isDeleting]);
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % words.length);
+        }, 3000); // Cycle every 3 seconds
+        return () => clearInterval(interval);
+    }, [words.length]);
 
     return (
-        <span className="inline-flex items-baseline">
-            <span className="text-gradient-ai">
-                {displayText}
-            </span>
-            <span className="ml-1 w-[4px] h-[0.9em] bg-[#5EA5F4] animate-pulse rounded-sm inline-block align-middle"></span>
+        <span className="inline-flex relative h-[1.2em] overflow-hidden align-text-bottom">
+            <AnimatePresence mode="wait">
+                <motion.span
+                    key={index}
+                    initial={{ y: "100%" }}
+                    animate={{ y: "0%" }}
+                    exit={{ y: "-100%" }}
+                    transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
+                    className="text-gradient-accent absolute left-0 whitespace-nowrap font-bold"
+                    style={{ position: 'relative' }} // Ensure it takes up space in flow
+                >
+                    {words[index]}
+                </motion.span>
+            </AnimatePresence>
         </span>
     );
 };
+

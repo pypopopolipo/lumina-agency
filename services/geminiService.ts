@@ -1,7 +1,7 @@
 import { AutomationStrategy } from "../types";
 
 export const generateStrategy = async (industry: string): Promise<AutomationStrategy[]> => {
-  const response = await fetch("/.netlify/functions/generate-strategy", {
+  const response = await fetch("/api/generate-strategy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
